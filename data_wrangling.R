@@ -59,6 +59,30 @@ xx <- read.table("https://jplalor.github.io/files/sdcTestSmall.txt",
 
 library(rvest)
 
+xyz <- haven::read_dta(file = "https://www3.nd.edu/~sberry5/data/stataExample.dta")
+install.packages("corrplot")
+library(corrplot)
+
+data.frame(x = rnorm(10), y = rnorm(10)) %>% 
+  cor() %>% 
+  corrplot()
+
+xyz %>% summary()
+
+xyz1 <- xyz %>% select(starts_with("lvi"),
+                       starts_with("effect"),
+                       starts_with("leader"),
+                       starts_with("cred"),
+                       Gender,
+                       Rater)
+  
+xyz1$Gender
+
+xyz1 %>% select(starts_with("lvi")) %>% 
+  cor(use = "complete.obs") %>% 
+  corrplot()
 
 
-
+xyz1 %>% filter(Rater == 0) %>% 
+  cor(use = "complete.obs") %>% 
+  corrplot()
