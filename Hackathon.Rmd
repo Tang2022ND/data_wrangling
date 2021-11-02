@@ -1,0 +1,126 @@
+---
+title: "Hackathon"
+output: html_document
+
+---
+# California Housing Prices (Block)
+
+
+#### Team members: Sully Noor, Arden Cohen, Wheaton Jackoboice, Yu Tang
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(radiant)
+library(maps)
+library(ggmap)
+
+housing <- read.delim("California_Houses.csv",header = T, sep = ",")
+
+
+
+
+
+housing <- housing %>% mutate(
+  room_per_household = Tot_Rooms/Households
+)
+housing$Ocean_Proxy <- as.factor(housing02$ocean_proximity)
+save(housing, file = "housing.rda")
+load("housing.rda")
+hq <- quantile(housing$Median_House_Value)
+price <- housing$Median_House_Value
+housing$Price_Category <- ifelse(price <= hq[2] , "very_low", 
+                                 ifelse(price > hq[2] & price <= hq[3], "low", 
+                                        ifelse(price > hq[3] & price <= hq[4], "average", 
+                                               ifelse(price > hq[4] & price <= 400000, "high", "very_high"))))
+
+housing$Median_Income <- housing$Median_Income * 10000
+housing$affordability <- housing$Median_House_Value/housing$Median_Income
+
+housing_afford <- housing %>% filter(affordability <= 12)
+housing_afford$comfort <- sqrt(housing_afford$room_per_household)/sqrt(housing_afford$affordability)
+housing_comfort <- housing_afford %>% filter(comfort <= 2)
+
+
+register_google("AIzaSyAVJQUd1mGICFac5zKE_r055727U5MJO9s")
+CAmap <- get_map(location ='california',zoom = 6, maptype = "roadmap", color = "bw")
+LAmap <- get_map(location ='Los Angles',zoom = 10, maptype = "roadmap", color = "bw")
+SFmap <- get_map(location ='San Francisco',zoom = 10, maptype = "roadmap", color = "bw")
+SJmap <- get_map(location ='San Jose',zoom = 10, maptype = "roadmap", color = "bw")
+```
+
+
+## Median House Value Map
+
+```{r, echo=FALSE, warning=FALSE, error=FALSE, fig.width = 11, fig.height = 7}
+#Median House Value Map
+CA_housing_price <- ggmap(CAmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing)) +
+  geom_point(data = housing, aes(color = Median_House_Value, alpha = 0.75))
+CA_housing_price ##CA
+
+LA_housing_price <- ggmap(LAmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing)) +
+  geom_point(data = housing, aes(color = Median_House_Value, alpha = 0.75))
+LA_housing_price ##LA 
+
+SF_housing_price <- ggmap(SFmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing)) +
+  geom_point(data = housing, aes(color = Median_House_Value, alpha = 0.75))
+SF_housing_price ##SF
+
+SJ_housing_price <- ggmap(SJmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing)) +
+  geom_point(data = housing, aes(color = Median_House_Value, alpha = 0.75))
+SJ_housing_price ##SJ
+```
+
+
+## Affordability Map
+```{r, echo=FALSE, warning=FALSE, error=FALSE, fig.width = 11, fig.height = 7}
+#Affordability Map
+
+CA_affordability <- ggmap(CAmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing_afford)) +
+  geom_point(data = housing_afford, aes(color = affordability, alpha = 0.75)) +
+  scale_color_gradient2(low = "green", high = "black", mid = "blue", midpoint = 6.9)
+CA_affordability ##CA
+
+LA_affordability <- ggmap(LAmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing_afford)) +
+  geom_point(data = housing_afford, aes(color = affordability, alpha = 0.75))  +
+  scale_color_gradient2(low = "green", high = "black", mid = "blue", midpoint = 6.9)
+LA_affordability ##LA 
+
+SF_affordability <- ggmap(SFmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing_afford)) +
+  geom_point(data = housing_afford, aes(color = affordability, alpha = 0.75)) +
+  scale_color_gradient2(low = "green", high = "black", mid = "blue", midpoint = 6.9)
+SF_affordability ##SF
+
+SJ_affordability <- ggmap(SJmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing_afford)) +
+  geom_point(data = housing_afford, aes(color = affordability, alpha = 0.75)) +
+  scale_color_gradient2(low = "green", high = "black", mid = "blue", midpoint = 6.9)
+SJ_affordability ##SJ
+```
+
+
+## Comfort Map
+```{r, echo=FALSE, warning=FALSE, error=FALSE, fig.width = 11, fig.height = 7}
+#Comfort Map
+
+
+
+CA_comfort <- ggmap(CAmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing_afford)) + geom_point(data = housing_comfort, aes(color = comfort, alpha = 0.75)) +
+  scale_color_gradient2(low = "red", high = "green", mid = "blue", midpoint = 1.2)
+CA_comfort ##CA
+
+LA_comfort <- ggmap(LAmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing_afford)) + geom_point(data = housing_comfort, aes(color = comfort, alpha = 0.75))  +
+  scale_color_gradient2(low = "red", high = "green", mid = "blue", midpoint = 1.2)
+LA_comfort ##LA 
+
+SF_comfort <- ggmap(SFmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing_afford)) + geom_point(data = housing_comfort, aes(color = comfort, alpha = 0.75)) +
+  scale_color_gradient2(low = "red", high = "green", mid = "blue", midpoint = 1.2)
+SF_comfort ##SF
+
+SJ_comfort <- ggmap(SJmap, base_layer = ggplot(aes(x = Longitude, y= Latitude), data = housing_afford)) + geom_point(data = housing_comfort, aes(color = comfort, alpha = 0.75)) +
+  scale_color_gradient2(low = "red", high = "green", mid = "blue", midpoint = 1.2)
+SJ_comfort ##SJ
+```
+
